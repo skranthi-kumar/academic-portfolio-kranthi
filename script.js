@@ -1,134 +1,118 @@
-// Navigation menu toggle
+// Navigation Toggle
 const hamburger = document.querySelector('.hamburger');
 const navLinks = document.querySelector('.nav-links');
 
 hamburger.addEventListener('click', () => {
-    const isExpanded = navLinks.classList.toggle('active');
-    hamburger.setAttribute('aria-expanded', isExpanded);
-    hamburger.querySelector('i').classList.toggle('fa-bars');
-    hamburger.querySelector('i').classList.toggle('fa-times');
+    navLinks.classList.toggle('active');
+    hamburger.setAttribute('aria-expanded', navLinks.classList.contains('active'));
 });
 
-document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', () => {
-        navLinks.classList.remove('active');
-        hamburger.setAttribute('aria-expanded', 'false');
-        hamburger.querySelector('i').classList.add('fa-bars');
-        hamburger.querySelector('i').classList.remove('fa-times');
-    });
-});
-
-// Smooth scrolling
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            window.scrollTo({
-                top: target.offsetTop - 80,
-                behavior: 'smooth'
-            });
-        }
-    });
-});
-
-// Active navigation highlight
-window.addEventListener('scroll', () => {
-    const sections = document.querySelectorAll('section');
-    const navLinks = document.querySelectorAll('.nav-links a');
-    let current = '';
-
-    sections.forEach(section => {
-        const sectionTop = section.offsetTop;
-        if (window.pageYOffset >= sectionTop - 160) {
-            current = section.getAttribute('id');
-        }
-    });
-
-    navLinks.forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('href').substring(1) === current) {
-            link.classList.add('active');
-        }
-    });
-});
-
-// Dark mode toggle
+// Dark Mode Toggle
 const modeToggle = document.querySelector('.mode-toggle');
+const body = document.body;
+
 modeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    const isDarkMode = document.body.classList.contains('dark-mode');
-    modeToggle.querySelector('i').classList.toggle('fa-moon', !isDarkMode);
-    modeToggle.querySelector('i').classList.toggle('fa-sun', isDarkMode);
+    body.classList.toggle('dark-mode');
+    const isDarkMode = body.classList.contains('dark-mode');
+    modeToggle.innerHTML = isDarkMode ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
     localStorage.setItem('darkMode', isDarkMode);
 });
 
+// Load Dark Mode Preference
 if (localStorage.getItem('darkMode') === 'true') {
-    document.body.classList.add('dark-mode');
-    modeToggle.querySelector('i').classList.remove('fa-moon');
-    modeToggle.querySelector('i').classList.add('fa-sun');
+    body.classList.add('dark-mode');
+    modeToggle.innerHTML = '<i class="fas fa-sun"></i>';
 }
 
-// Publication filters
+// Fade-in Animation on Scroll
+const fadeInElements = document.querySelectorAll('.fade-in');
+
+const handleScroll = () => {
+    fadeInElements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 100) {
+            el.classList.add('visible');
+        }
+    });
+};
+
+window.addEventListener('scroll', handleScroll);
+handleScroll(); // Trigger on page load
+
+// Publication Filter
 const filterButtons = document.querySelectorAll('.filter-btn');
 const publicationItems = document.querySelectorAll('.publication-item');
 
 filterButtons.forEach(button => {
     button.addEventListener('click', () => {
         const filter = button.getAttribute('data-filter');
+        
         filterButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
 
         publicationItems.forEach(item => {
             const category = item.getAttribute('data-category');
-            item.style.display = filter === 'all' || category === filter ? 'block' : 'none';
+            if (filter === 'all' || category === filter) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
         });
     });
 });
 
-// Form validation
+// Contact Form Validation
 const contactForm = document.getElementById('contactForm');
-if (contactForm) {
-    contactForm.addEventListener('submit', function(e) {
-        e.preventDefault();
 
-        const name = document.getElementById('name').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const subject = document.getElementById('subject').value.trim();
-        const message = document.getElementById('message').value.trim();
+contactForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const subject = document.getElementById('subject').value;
+    const message = document.getElementById('message').value;
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!name || name.length < 2) {
-            alert('Please enter a valid name.');
-            return;
-        }
-        if (!email || !emailRegex.test(email)) {
-            alert('Please enter a valid email.');
-            return;
-        }
-        if (!subject || subject.length < 5) {
-            alert('Please enter a subject (min 5 characters).');
-            return;
-        }
-        if (!message || message.length < 10) {
-            alert('Please enter a message (min 10 characters).');
-            return;
-        }
-
-        alert(`Thank you, ${name}! Your message has been received.`);
+    if (name && email && subject && message) {
+        alert('Thank you for your message! I will get back to you soon.');
         contactForm.reset();
-    });
-}
+    } else {
+        alert('Please fill in all fields.');
+    }
+});
 
-// Fade-in animations
-const fadeInElements = document.querySelectorAll('.fade-in');
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            observer.unobserve(entry.target);
-        }
-    });
-}, { threshold: 0.1 });
+// Visitor counter using CountAPI
+document.addEventListener('DOMContentLoaded', () => {
+    const visitorCountElement = document.getElementById('visitor-count');
+    
+    // Check if the user has visited before using localStorage
+    const hasVisited = localStorage.getItem('hasVisited');
 
-fadeInElements.forEach(element => observer.observe(element));
+    // Function to fetch and display the visitor count
+    const updateVisitorCount = () => {
+        fetch('https://api.countapi.xyz/get/skranthi-kumar/academic-portfolio-kranthi')
+            .then(response => response.json())
+            .then(data => {
+                visitorCountElement.textContent = data.value || 0;
+            })
+            .catch(error => {
+                console.error('Error fetching visitor count:', error);
+                visitorCountElement.textContent = 'N/A';
+            });
+    };
+
+    // If the user hasn't visited before, increment the counter
+    if (!hasVisited) {
+        fetch('https://api.countapi.xyz/hit/skranthi-kumar/academic-portfolio-kranthi')
+            .then(response => response.json())
+            .then(data => {
+                localStorage.setItem('hasVisited', 'true');
+                visitorCountElement.textContent = data.value || 0;
+            })
+            .catch(error => {
+                console.error('Error incrementing visitor count:', error);
+                visitorCountElement.textContent = 'N/A';
+            });
+    } else {
+        // If the user has visited, just fetch the current count
+        updateVisitorCount();
+    }
+});
